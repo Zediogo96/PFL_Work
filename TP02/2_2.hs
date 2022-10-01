@@ -148,6 +148,38 @@ fromBits :: [Int] -> Int
 -- ou nouta syntax => $ funciona como substitudo de parentesis, e significa "apply"
 fromBits l = sum $ map (2^) $ findIndices (==1) $ reverse l 
 
+-- Exercício 2.24
+
+-- (a)
+merge :: Ord a => [a] -> [a] -> [a]
+merge xs [] = xs
+merge [] ys = ys
+merge (x:xs) (y:ys) 
+    | x < y = x:merge xs (y:ys)
+    | otherwise = y:merge (x:xs) ys
+
+-- (b)
+
+divideList :: [a] -> ([a],[a])
+divideList [] = ([],[])
+divideList [x] = ([x],[])
+divideList l
+    | (mod size 2 == 0) = ((take halfSize l ), drop halfSize l)
+    | otherwise = ((take (halfSize+1) l ), (drop (halfSize + 1) l))
+    where 
+        size = length l
+        halfSize = div size 2
+          
+
+
+mergeSort :: Ord a => [a] -> [a]
+mergeSort [] = []
+mergeSort [x] = [x]
+mergeSort xs = merge (mergeSort left) (mergeSort right)
+    where  (left,right) = divideList xs
+
+
+
 main :: IO()
 main = do
 
@@ -179,7 +211,7 @@ main = do
     -- 2.10
     print(perfeito 500) -}
     -- 2.11
-    print(pitagoricos 10)
+{-     print(pitagoricos 10)
     -- 2.12 
     print(primo 43)
     print(primo 45)
@@ -200,7 +232,16 @@ main = do
     -- 2.22
     print(toBits 29)
     -- 2.23
-    print(fromBits[1,1,1,0,1])
+    print(fromBits[1,1,1,0,1]) -}
+    -- 2.24 
+    print(merge [3,5,7] [1,2,4,6])
+    {- 
+    print(divideList [1,2,3,4,5,6,7])
+    print(divideList [1,2,3,4,5,6])
+    print(divideList [1])
+     -}
+    print(divideList [3,5,7,1,2,4,6])
+    print(mergeSort [3,5,7,1,2,4,6])
 
 
     
