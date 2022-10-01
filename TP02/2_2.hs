@@ -57,7 +57,13 @@ myssort l = z : myssort (myDelete z l)
 somaquadrados :: (Num a, Enum a) => a -> a -> a
 somaquadrados a b = sum [ x^2 | x <- [a..b]]
 
--- Exercício 2.7
+-- Exercício 2.7 PERGUNTAR O PORQUÊ DA NECESSIDADE DO fromIntegral, stackOverflow não explicou um crl
+
+aprox :: Int -> Double
+aprox n = sum [(-1)^k / fromIntegral (2*k +1) | k <- [0..n]]
+
+aprox' :: Int -> Double
+aprox' n = sum [((-1) ^ k) / fromIntegral((k + 1) ^ 2) | k <- [1..n]]
 
 -- Exercício 2.8
 
@@ -101,8 +107,8 @@ merssene = [i | i <- [1..30], isMerssene i]
 
 -- Exercício 2.15
 {- cifraLetra :: Int -> Char -> Int
-cifraLetra k x 
-    | isLetter x && isUpper x = chr (ord ) -}
+
+-}
 
 
 -- Exercício 2.16
@@ -170,15 +176,11 @@ divideList l
         size = length l
         halfSize = div size 2
           
-
-
 mergeSort :: Ord a => [a] -> [a]
 mergeSort [] = []
 mergeSort [x] = [x]
 mergeSort xs = merge (mergeSort left) (mergeSort right)
     where  (left,right) = divideList xs
-
-
 
 main :: IO()
 main = do
@@ -198,7 +200,7 @@ main = do
     -- 2.6
     print(somaquadrados 1 100)
     -- 2.7
-
+    
     -- 2.8
     print(dotprod [2.3, 3.4, 4.3]  [2.4, 3.4, 4.9])
     print(dotprod' [2.3, 3.4, 4.3]  [2.4, 3.4, 4.9])
@@ -233,15 +235,18 @@ main = do
     print(toBits 29)
     -- 2.23
     print(fromBits[1,1,1,0,1]) -}
-    -- 2.24 
-    print(merge [3,5,7] [1,2,4,6])
+    -- 2.24
     {- 
+    print(merge [3,5,7] [1,2,4,6])
+    
     print(divideList [1,2,3,4,5,6,7])
     print(divideList [1,2,3,4,5,6])
     print(divideList [1])
      -}
     print(divideList [3,5,7,1,2,4,6])
     print(mergeSort [3,5,7,1,2,4,6])
+
+    print(aprox 1000000)
 
 
     
