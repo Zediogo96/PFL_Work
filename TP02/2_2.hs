@@ -135,6 +135,12 @@ algarismos n
 algarismosRev :: Int -> [Int]
 algarismosRev n = revertList (algarismos n)
 
+-- Exercício 2.22
+toBits :: Int -> [Int] 
+toBits 0 = [0]
+toBits 1 = [1]
+toBits n = toBits(div n 2) ++ [mod n 2]
+
 main :: IO()
 main = do
 
@@ -184,6 +190,8 @@ main = do
     -- 2.21
     print(algarismos 12345)
     print(algarismosRev 12345)
+    -- 2.22
+    print(toBits 29)
 
 
     
