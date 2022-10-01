@@ -99,6 +99,9 @@ merssene = [i | i <- [1..30], isMerssene i]
 -- Exercícip 2.14
 
 -- Exercício 2.15
+{- cifraLetra :: Int -> Char -> Int
+cifraLetra k x 
+    | isLetter x && isUpper x = chr (ord ) -}
 
 
 -- Exercício 2.16
@@ -119,6 +122,18 @@ forte xs = (length xs >= 8) && checkUpper xs && checkLower xs && checkDigit xs
         checkLower xs = (length [isLower x | x <- xs ] /= 0)
         checkDigit xs = (length [isDigit x | x <- xs ] /= 0)
 
+-- Exercício 2.21
+revertList :: [Int] -> [Int]
+revertList [] = []
+revertList (x:xs) = (revertList xs) ++ [x]
+
+algarismos :: Int -> [Int]
+algarismos n 
+    | n < 10 = [n]
+    | otherwise = algarismos (div n 10) ++ algarismos (mod n 10)
+
+algarismosRev :: Int -> [Int]
+algarismosRev n = revertList (algarismos n)
 
 main :: IO()
 main = do
@@ -163,6 +178,12 @@ main = do
     print(replicate' 10 2)
     -- 2.17
     print(forte "Pwds1234")
+    -- 2.18
+    -- 2.19
+    -- 2.20
+    -- 2.21
+    print(algarismos 12345)
+    print(algarismosRev 12345)
 
 
     
