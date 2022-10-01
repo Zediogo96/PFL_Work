@@ -130,6 +130,15 @@ classifica_IMC a b
 
 -- 1.11
 
+min' :: Ord a => a -> a -> a -> a
+min' x y = min a
+        where a = min x y
+
+
+max' :: Ord a => a -> a -> a -> a
+max' x y = max a
+        where a = max x y
+
 -- 1.12
 xor :: Bool -> Bool -> Bool
 xor a b 
