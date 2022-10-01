@@ -1,4 +1,5 @@
 import Data.Char
+import Data.List
 
 -- Exercício 2.2
 
@@ -141,6 +142,12 @@ toBits 0 = [0]
 toBits 1 = [1]
 toBits n = toBits(div n 2) ++ [mod n 2]
 
+-- Exercício 2.23
+fromBits :: [Int] -> Int
+{- fromBits l = sum (map (2^) (findIndices (==1) (reverse l))) -}
+-- ou nouta syntax => $ funciona como substitudo de parentesis, e significa "apply"
+fromBits l = sum $ map (2^) $ findIndices (==1) $ reverse l 
+
 main :: IO()
 main = do
 
@@ -192,6 +199,8 @@ main = do
     print(algarismosRev 12345)
     -- 2.22
     print(toBits 29)
+    -- 2.23
+    print(fromBits[1,1,1,0,1])
 
 
     
