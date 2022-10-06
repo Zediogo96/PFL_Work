@@ -8,8 +8,6 @@ interperse _ [] = []
 interperse _ [x] = [x]
 interperse a (x:xs) = x : a : interperse a xs -- usa-se : para concatenar elementos sem ser de listas
                                                 -- em vez de interperse a (x:xs) = [x] ++ [a] ++ interperse a xs
-
-
 -- Exercício 2.3
 
 mdc :: Int -> Int -> Int
@@ -63,7 +61,7 @@ aprox :: Int -> Double
 aprox n = sum [(-1)^k / fromIntegral (2*k +1) | k <- [0..n]]
 
 aprox' :: Int -> Double
-aprox' n = sum [((-1) ^ k) / fromIntegral((k + 1) ^ 2) | k <- [1..n]]
+aprox' n = sum [((-1) ^ k) / fromIntegral((k + 1) ^ 2) | k <- [0..n]]
 
 -- Exercício 2.8
 
@@ -79,6 +77,11 @@ dotprod' l1 l2
     | (length l1) /= (length l2) = error "Different sizes, can't calculate"
     | otherwise = sum [x*y | (x,y) <- (zip l1 l2)]
 
+dotprod'' :: [Float] -> [Float] -> Float
+dotprod'' [] [] = 0
+dotprod'' [a] [] = 
+dotprod'' [] [a] =
+dotprod'' l1 l2 = sum [x*y | (x,y) <- (zip l1 l2)]
 -- Exercício 2.9
 
 divprop :: Integer -> [Integer]
@@ -246,7 +249,8 @@ main = do
     print(divideList [3,5,7,1,2,4,6])
     print(mergeSort [3,5,7,1,2,4,6])
 
-    print(aprox 1000000)
+    -- print (aprox 10000000)
+    print (aprox' 10000000)
 
 
     

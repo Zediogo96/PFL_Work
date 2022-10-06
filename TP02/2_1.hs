@@ -17,15 +17,23 @@ myconcat :: [[a]] -> [a]
 myconcat [] = []
 myconcat (x:xs) = x ++ myconcat xs 
 
+myconcat' :: [[a]] -> [a] 
+myconcat' l = [x | xs <- l, x <- xs]
+
 -- (d)
 myreplicate :: Int -> a -> [a]
 myreplicate 0 y = []
 myreplicate x y = y : myreplicate (x-1) y
 
+myreplicate' :: Int -> a -> [a]
+myreplicate' x y = [x | _ <- [1..n]]
+
 -- (e)
 myListSelect' :: [a] -> Int -> a
 myListSelect' a 0 = head a
 myListSelect' a b = myListSelect' (drop 1 a) (b-1)
+
+myListSelect'' a b = head [x | (x,i) <- zip l [0..n]]
 
 -- (f)
 {-The Eq typeclass provides an interface for testing for equality. 
