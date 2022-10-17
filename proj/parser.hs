@@ -1,29 +1,33 @@
-import Data.Char (isSpace, isLetter, isDigit,)
+import Data.Char (isSpace, isLetter)
 import Data.List
 
--- Auxiliar Functions
-fst' (a,_,_) = a
-snd' (_,a,_) = a
-third' (_,_,a) = a
-
-isOperand :: Char -> Bool
-isOperand c = c `elem` ['+', '-']
-
+-- TÁ A VOLTARIIIII
+{- 
 split :: String -> [String]
 split "" = []
 split str 
     |
     start : (split (drop 1 rest))
     where (start, rest) = (break (isOperand) str)
-        --   signal = whatSignal (head rest)
+-}
 
-formatSpace :: [String] -> [String]
-formatSpace = map (filter (not . isSpace))
+-- Helper functions, to better allows to use "truples" to represent our monomials
+-- ghc STL only supports tuples
+
+fst' (a,_,_) = a
+snd' (_,a,_) = a
+third' (_,_,a) = a
+
+-- Easy way to check if an element is an operand
+
+isOperand :: Char -> Bool
+isOperand c = c `elem` ['+', '-']
 
 hasMult :: String -> Integer
 hasMult l 
-    | (l == [] ) = 1
-    | (all isDigit l) = read l :: Integer
+    | (length l == 0 ) = 1
+    | (l == "-") = 0 - read (drop 1 l ):: Integer
+    | otherwise = read l :: Integer
 
 hasVar :: String -> Char
 hasVar l 
@@ -33,60 +37,54 @@ hasVar l
 hasExp :: String -> Integer
 hasExp l
     | (l == []) = 1
-    | (all isDigit (drop 1 l)) = read (drop 1 l) :: Integer
+    | otherwise = read (drop 1 l) :: Integer 
 
-whatSignal :: Char -> Char
-whatSignal c 
-    | c == '-' = '-'
-    | c == '+' = ' '
+-- Slipts lists by chosen Char, only used with '+' in this project
+split :: Char -> String -> [String]
+split _ "" = []
+split c s = firstWord : (split c rest)
+    where firstWord = takeWhile (/=c) s
+          rest = drop (length firstWord + 1) s
 
-teste :: [String] -> [(Integer, Char, Integer)]
-teste [] = []
-teste (x:xs) = (hasMult primeiro, hasVar segundo, hasExp resto2) : teste xs
-    where (primeiro, resto1) = break (isLetter) x
-          (segundo, resto2) = break (=='^') resto1
+-- Remove all spaces from a string, for easier parsing
+formatSpace :: String -> String
+formatSpace = filter (not . isSpace)
+
+-- Clever way to parse the polynomial, add an extra '+' before every '-'
+-- so after we split the string by '+', it helps us keep the '-'
+simplify_minus :: String -> String
+simplify_minus [] = ""
+simplify_minus (x:xs)
+        | x == '^' = x : head xs : simplify_minus (tail xs)
+        | x == '-' = "+-" ++ simplify_minus xs
+        | otherwise =  x : simplify_minus xs
+
+-- Splits an String by occurrences of '+' and creates a list of those sub-strings
+remove_plus :: String -> [String]
+remove_plus s =  split '+' s
+
+-- Removes multiplication on substrings
+remove_mult :: [String] -> [[String]]
+remove_mult [] = []
+remove_mult (x:xs) =  (remove_power (split '*' x)) : remove_mult xs
+
+-- Function used to separate a variable that has an power. This translates ["y^2] to [["y", "2"]] 
+remove_power :: [String] -> [String]
+remove_power  [] = []
+remove_power (x:xs) = (split '^' x) ++ remove_power xs
+
+-- Wrapper function for all the functions necessary to the parser
+parse_poly :: String -> [[String]]
+parse_poly [] = [[[]]]
+parse_poly s = remove_mult (remove_plus (simplify_minus (formatSpace s)))
 
 main :: IO() 
 main = do
 
-    let s1 = "5x^3 + 10y^4 + 5z^5 + x^2 + 5"
-    let s2 = formatSpace(split s1)
-    let s3 = teste s2
+    putStr("\nRANDOM TESTING ON THE WAE\n")
 
-    putStr("\nBefore Parse:  ")
-    print(s1)
-    putStr("\nFormat Space:")
-    print(s2)
-    {- putStr("After Parse:   ")
-    print(s3) -}
-    
-    putStr("\n------------------------\n")
+    putStr("\n Poly 1: 5*x^3 - 10*y^4 - 5z^5 - x^2 - 5 - x\n")
+    print(parse_poly "5xyk^3 + 10y^4 + 5z^5 - x^2 - 5 + x")
 
-    {- 
-    let s4 = "5x^3 + 10y^4 - 10 - x^5"
-    let s5 = formatSpace (split s4)
-    
-    putStr("\nBefore Parse:  ")
-    print(s4)
-    putStr("After Parse:   ")
-    print(s5) -}
-
-    {- print(break (isOperand) "5x^3 + 3y^2 - 1")
-    print(span (isOperand) "+ 3y^2 - 1")
-
-    let l1 = ["5x^3"," ", "3y^2","-", "1"]
-    let t1 = tst l2
-    print(l2)
-    print(fst t1)
-
-
-    putStr("----------------------------------------")
-    let s1 = "5x^3 + 6x^4"
-    let s2 = teste 
-    let s3 = formatSpace s2
-    
-    print("Before:")
-    print(s1)
-    print("Tokenize:")
-    print(s2)
-    -}
+    putStr("\n Poly 2: 5x*y*z^3 + 10*y^4 + 5z^5 - x^2 - 5 + x\n")
+    print(parse_poly "5xyk^3 + 10y^4 + 5z^5 - x^2 - 5 + x")
