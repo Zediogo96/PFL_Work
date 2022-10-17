@@ -1,22 +1,7 @@
-import Data.Char (isSpace, isLetter)
+module PolyParser where
+
+import Data.Char (isSpace, isLetter, isAlpha)
 import Data.List
-
--- TÁ A VOLTARIIIII
-{- 
-split :: String -> [String]
-split "" = []
-split str 
-    |
-    start : (split (drop 1 rest))
-    where (start, rest) = (break (isOperand) str)
--}
-
--- Helper functions, to better allows to use "truples" to represent our monomials
--- ghc STL only supports tuples
-
-fst' (a,_,_) = a
-snd' (_,a,_) = a
-third' (_,_,a) = a
 
 -- Easy way to check if an element is an operand
 
@@ -74,17 +59,43 @@ remove_power  [] = []
 remove_power (x:xs) = (split '^' x) ++ remove_power xs
 
 -- Wrapper function for all the functions necessary to the parser
-parse_poly :: String -> [[String]]
-parse_poly [] = [[[]]]
-parse_poly s = remove_mult (remove_plus (simplify_minus (formatSpace s)))
+parse_poly :: String -> [(Integer, String, Integer)]
+parse_poly [] = []
+parse_poly s = map (tuplify) (rem_m (remove_plus (simplify_minus (formatSpace s))))
 
+rem_m :: [String] -> [String]
+rem_m l = map (filter (not . (=='*'))) l 
+
+helper_int :: String -> Integer
+helper_int s 
+    | s == "" = 1
+    | s == "-" = -1
+    | otherwise = read s :: Integer
+
+helper_char :: String -> String
+helper_char s
+    | s == [] = " "
+    | otherwise = s
+
+tuplify :: String -> (Integer, String, Integer)
+tuplify l = (helper_int t1, helper_char t3, helper_int (drop 1 t4))
+    where (t1, t2)  = (break (isAlpha) l)
+          (t3, t4) = (break (=='^') t2)
+
+{- 
 main :: IO() 
 main = do
 
+    putStr("\n CENAS \n")
+    putStr("--------------\n")
+    print(tuplify "5xy^3")
+    print(tuplify "txrewrwewewerr")
+    print(tuplify "-x^2")
+
     putStr("\nRANDOM TESTING ON THE WAE\n")
+    
+    putStr("--------------\n")
 
-    putStr("\n Poly 1: 5*x^3 - 10*y^4 - 5z^5 - x^2 - 5 - x\n")
-    print(parse_poly "5xyk^3 + 10y^4 + 5z^5 - x^2 - 5 + x")
+    print(parse_poly "5*xyz^3 - 10*y^4 - 5*z^5 - x^2 - 5 - x")
+-}
 
-    putStr("\n Poly 2: 5x*y*z^3 + 10*y^4 + 5z^5 - x^2 - 5 + x\n")
-    print(parse_poly "5xyk^3 + 10y^4 + 5z^5 - x^2 - 5 + x")

@@ -1,3 +1,5 @@
+import PolyParser
+
 import Data.List (sortBy, sort, insert, unfoldr)
 import Data.Ord (comparing)
 import Data.Function (on)
@@ -5,7 +7,11 @@ import Data.Char (isSpace)
 
 type Poly = (Integer, Char, Integer)
 
--- Auxiliar Functions
+-- TÁ A VOLTARIIIII
+
+-- Helper functions, to better allows to use "truples" to represent our monomials
+-- ghc STL only supports tuples
+
 fst' (a,_,_) = a
 snd' (_,a,_) = a
 third' (_,_,a) = a
@@ -59,30 +65,41 @@ derivePoly xs = simplify_total (derive xs)
 
 main :: IO() 
 main = do
-    
-    let l1 = simplify_total [(1,"x",2), (1,"x",2),(1,"y",3),(2,"z",4), (5,"y",4), (6,"z", 7)]
-    let l2 = simplify_total [(-1,"x",2), (1,"x",2),(1,"y",3),(2,"z",4), (5,"y",4), (7," ", 3)]
-    let l3 = []
-    let l4 = l1 ++ l2
-    let l5 = l1 ++ l3
-    let l6 = [(0,"x",1),(20,"y",0),(3,"y",2),(42,"z",6),(8,"z",3),(20,"y",3),(3,"y",2),(8,"z",3)]
 
-    let l7 = derivePoly l4
+    putStr("\n-- Alínea (a) -----------------\n\n")
 
-    putStr("\n")
-    print("Originals:")
+    let l1 = parse_poly "5*xyz^3 - 10*y^4 - 5*z^5 - x^2 - 5 - x + 30*y^4"
+
+    putStr("Polynomials Antes\n")
+    print(l1)
+    putStr("Polynomial Simplificado:\n")
+    print(simplify l1)
+
+    putStr("\n-- Alínea (b) -----------------\n\n")
+
+    let l2 = simplify (parse_poly "5*xyz^3 - 10*y^4 - 5*z^5 - x^2 - 5 - x + 30*y^4")
+
+    putStr("Polynomials Antes\n")
     print(l1)
     print(l2)
-    print("Sum of Polynomials:")
+    putStr("Somado:\n")    
     print(addPoly' l1 l2)
 
-    putStr("\n")
-    print("Before Derivation:")
-    print(l4)
-    print("After Derivation:")
-    print(l7)
-    print("Final Result:")
-    print(result' l7)
+    putStr("\n-- Alínea (c) -----------------\n\n")
+
+    putStr("\n-- Alínea (d) -----------------\n\n")
+    
+    putStr("Polynomials Antes\n")
+    print(l2)
+    putStr("Derivado:\n")    
+    print(derivePoly l2)
+
+
+
+
+
+
+
 
     -- TESTES RANDOM
     -- print(poly_sorter (simplify_total [(-1,"x",2), (1, "x",2),(1, "y",3),(2, "z" ,4), (5,"y",4)]))
