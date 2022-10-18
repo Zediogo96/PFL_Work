@@ -1,28 +1,11 @@
 module PolyParser where
 
-import Data.Char (isSpace, isLetter, isAlpha)
+import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 import Data.List
 
--- Easy way to check if an element is an operand
-
-isOperand :: Char -> Bool
-isOperand c = c `elem` ['+', '-']
-
-hasMult :: String -> Integer
-hasMult l 
-    | (length l == 0 ) = 1
-    | (l == "-") = 0 - read (drop 1 l ):: Integer
-    | otherwise = read l :: Integer
-
-hasVar :: String -> Char
-hasVar l 
-    | (l == []) = ' '
-    | (isLetter (head l)) = (head l)
-
-hasExp :: String -> Integer
-hasExp l
-    | (l == []) = 1
-    | otherwise = read (drop 1 l) :: Integer 
+-- Wrapper function just to make the process of reading an integer less verbose on another functions
+read_Int :: String -> Integer
+read_Int s = read s :: Integer 
 
 -- Slipts lists by chosen Char, only used with '+' in this project
 split :: Char -> String -> [String]
@@ -44,58 +27,71 @@ simplify_minus (x:xs)
         | x == '-' = "+-" ++ simplify_minus xs
         | otherwise =  x : simplify_minus xs
 
+-- Removes first element from list without blowing up if the list is empty (like regular init)
+pop :: [a] -> [a]
+pop [] = []
+pop xs = init xs
+
 -- Splits an String by occurrences of '+' and creates a list of those sub-strings
 remove_plus :: String -> [String]
 remove_plus s =  split '+' s
 
 -- Removes multiplication on substrings
-remove_mult :: [String] -> [[String]]
-remove_mult [] = []
-remove_mult (x:xs) =  (remove_power (split '*' x)) : remove_mult xs
+remove_mult :: [String] -> [String]
+remove_mult l = map (filter (not . (=='*'))) l 
 
 -- Function used to separate a variable that has an power. This translates ["y^2] to [["y", "2"]] 
 remove_power :: [String] -> [String]
 remove_power  [] = []
 remove_power (x:xs) = (split '^' x) ++ remove_power xs
 
+-- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
+parseMonomial :: String -> (Integer, [(Char, Integer)])
+parseMonomial s = case break isAlpha s of 
+        ([], varPows) -> (1, parseUnitMonomial varPows)
+        (coef, varPows) -> (parseCoef coef, parseUnitMonomial varPows) 
+
+-- Parses the coefficient, handling negative values and the absence of coefficient
+parseCoef :: String -> Integer
+parseCoef [] = 1
+parseCoef s 
+        | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
+        | (head s == '-') = -1
+        | otherwise = read s :: Integer 
+
+handleSmth :: String -> Integer
+handleSmth s
+        | s == [] = 1
+        | otherwise = read s :: Integer
+
+cheeky_zipper :: (String, String) -> [(Char, Integer)]
+cheeky_zipper (l,p) 
+    | (p == "") =  zip l (repeat 1)
+    | ((length l) == 1) = [(head l, 1)]
+    | otherwise = zip (pop l) (repeat 1)
+    
+
+parseUnitMonomial :: String -> [(Char, Integer)]
+parseUnitMonomial [] = []
+parseUnitMonomial l 
+        | (l == []) = []
+        | (all isAlpha l) = cheeky_zipper (vars,pows)
+        | (length (vars) > 1) = (cheeky_zipper (vars,pows)) ++ [(last vars, read_Int (takeWhile (isDigit) (tail fx)))] ++ parseUnitMonomial rest
+        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (tail pows)))] ++ parseUnitMonomial rest
+        where 
+        (vars, pows) = span isAlpha l
+        (fx, rest) = break isAlpha pows
+
 -- Wrapper function for all the functions necessary to the parser
-parse_poly :: String -> [(Integer, String, Integer)]
+parse_poly :: String -> [(Integer, [(Char, Integer)])]
 parse_poly [] = []
-parse_poly s = map (tuplify) (rem_m (remove_plus (simplify_minus (formatSpace s))))
+parse_poly s = map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s))))
 
-rem_m :: [String] -> [String]
-rem_m l = map (filter (not . (=='*'))) l 
-
-helper_int :: String -> Integer
-helper_int s 
-    | s == "" = 1
-    | s == "-" = -1
-    | otherwise = read s :: Integer
-
-helper_char :: String -> String
-helper_char s
-    | s == [] = " "
-    | otherwise = s
-
-tuplify :: String -> (Integer, String, Integer)
-tuplify l = (helper_int t1, helper_char t3, helper_int (drop 1 t4))
-    where (t1, t2)  = (break (isAlpha) l)
-          (t3, t4) = (break (=='^') t2)
-
-{- 
 main :: IO() 
 main = do
+    putStr("\n---- ----- TESTING OVERLOAD ----- ----\n\n")
 
-    putStr("\n CENAS \n")
-    putStr("--------------\n")
-    print(tuplify "5xy^3")
-    print(tuplify "txrewrwewewerr")
-    print(tuplify "-x^2")
+    print(parse_poly "5*xyz^3 + 10*xy^4 + 5*z^5 - x^2 - 5 - x - xyz - 14*x^2y^4z^55")
+    print(parse_poly "xyz")
 
-    putStr("\nRANDOM TESTING ON THE WAE\n")
-    
-    putStr("--------------\n")
-
-    print(parse_poly "5*xyz^3 - 10*y^4 - 5*z^5 - x^2 - 5 - x")
--}
 
