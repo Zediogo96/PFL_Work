@@ -3,6 +3,9 @@ module PolyParser where
 import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 import Data.List
 
+type Mono = (Integer, [(Char, Integer)])
+type Poly = [Mono]
+
 -- Wrapper function just to make the process of reading an integer less verbose on another functions
 read_Int :: String -> Integer
 read_Int s = read s :: Integer 
@@ -87,11 +90,29 @@ parse_poly :: String -> [(Integer, [(Char, Integer)])]
 parse_poly [] = []
 parse_poly s = map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s))))
 
-{- main :: IO() 
-main = do
-    putStr("\n---- ----- TESTING OVERLOAD ----- ----\n\n")
 
-    print(parse_poly "5*xyz^3 + 10*xy^4 + 5*z^5 - x^2 - 5 - x - xyz - 14*x^2y^4z^55")
-    print(parse_poly "xyz") -}
+-- REVERSE PARSER
 
+reverse_parser :: Mono -> String 
+reverse_parser (a,b) 
+    | (a == 1)  = "+ " ++ parse_variables b
+    | (a == -1) = "- " ++ parse_variables b
+    | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
+    | otherwise = "+ " ++ (show a) ++ parse_variables b
 
+parse_variables :: [(Char, Integer)] -> String
+parse_variables [] = ""
+parse_variables (x:xs) = [(fst x)] ++ parse_var (snd x) ++ parse_variables xs
+
+parse_var :: Integer -> String
+parse_var i
+    | i == 1 = ""
+    | i == -1 = "-"
+    | otherwise = "^" ++ show i
+
+handle_first_plus :: String -> String
+handle_first_plus s 
+    | ((head s) == '+') = (drop 2 s)
+
+wrap_reverse_parser :: [Mono] -> String
+wrap_reverse_parser l = handle_first_plus (intercalate " " (map (reverse_parser) l))

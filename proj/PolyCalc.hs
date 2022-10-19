@@ -1,19 +1,15 @@
-import PolyParser
-import ReverseParser
+module PolyCalc where
 
-import Data.List(nub, sort, group, groupBy, partition, sortBy)
+import Data.List(nub, sort, group, groupBy, partition, sortBy, sortOn)
 import Data.Function
 
 -- 5xy^3 + y-> [(5, [('x',1), ('y', 3)]), (1, [('y'], 1)]
-type Poly = [(Integer, [(Char, Integer)])]
-
 simplify' :: Poly -> Poly
 simplify' [] = []
 simplify' (x:xs) = [(fst x + vs, snd x)] ++ simplify' resto
     where 
         vs = sum (map (fst) ks)
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
-        -- resto = filter (\y -> (lisEquals (snd x) (snd y) == False)) xs
 
 addPoly' :: Poly -> Poly -> Poly 
 addPoly' xs ys = simplify' (xs ++ ys)
@@ -60,19 +56,46 @@ poly_sorter l = sortBy (flip compare `on` fst) l --((compare `on` (snd) <>
 -- Wrapper Function for the complete treatment of polynomial
 simplify_total l = poly_sorter (remove_zeros (simplify' l))
 
-derive (x:xs) a = 
-  
-[(x * z, y, z - 1) | (x,y,z) <- xs]
+helper_func :: [(Char, Integer)] -> (Char,Integer)
+helper_func [] = (' ',1)
+helper_func l = head l
 
-main :: IO() 
-main = do
-    print(derive )
-    putStr("\n-- Alínea (a) -----------------\n\n")
+-- Falta remover zeros, espaços e melhorar derive qd é vazio
+derive :: Poly -> Char -> Poly
+derive [] _ = []
+derive (x:xs) c = (coef, (fst to_derive, (snd (to_derive) - 1)) : diff) : derive xs c
+  where 
+    (equal, diff) = partition (\(a,b) -> (a == c)) (snd x)
+    to_derive = helper_func equal
+    coef = (fst x) * ((snd to_derive))
 
-    let p1 = [(5,[('x',1),('y',1),('z',3)]),(20,[('y',4)]),(-5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)])]
-    print(simplify_total p1)
-    
-    putStr("\n-- Alínea (b) -----------------\n\n")
-    let p2 = [(10,[('x',1),('y',1),('z',3)]),(-20,[('y',4)]),(-5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)])]
-    let p3 = addPoly' p1 p2
-    print(remove_zeros p3)  
+flt_empty :: [(Char, Integer)] -> [(Char,Integer)]
+flt_empty [] = []
+flt_empty x = filter (\(a,b) -> a /= ' ') x
+
+multiply_monoid :: Mono -> Mono -> Mono
+multiply_monoid x y = (coef, sumThem (variables))
+  where   
+    coef = (fst x) * (fst y)
+    variables = (snd x) ++ (snd y)
+
+sumThem = map sumGroup . groupBy fstEq . sortOn fst
+  where
+    sumGroup (x:xs) = (fst x, sum $ map snd (x:xs))
+    sumGroup _ = error "This can never happen - groupBy cannot return empty groups"
+    fstEq (a, _) (b, _) = a == b
+
+
+multiply_Poly :: Poly -> Poly -> Poly
+multiply_Poly l1 l2 = concatMap (\x -> map (\y -> multiply_monoid x y) l1) l2
+
+-- POR MELHORAR
+
+{-
+-- Auxiliar function to remove arguments that their first element is equal to zero
+remove_zeros :: (Num a, Eq a) => [(a,b,c)] -> [(a,b,c)]
+remove_zeros xs = [c | c <- xs, (fst' c /= 0)] 
+
+-- Sort by order of first element and then comparing the first
+poly_sorter l = sortBy ((compare `on` snd') <> (flip compare `on` fst')) l
+ -}
