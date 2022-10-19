@@ -3,14 +3,15 @@ module PolyParser where
 import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 import Data.List
 
-type Mono = (Integer, [(Char, Integer)])
+type Var = (Char, Integer)
+type Mono = (Integer, [Var])
 type Poly = [Mono]
 
--- Wrapper function just to make the process of reading an integer less verbose on another functions
+-- Helper function just to make the process of reading an integer less verbose on another functions
 read_Int :: String -> Integer
 read_Int s = read s :: Integer 
 
--- Slipts lists by chosen Char, only used with '+' in this project
+-- Splits lists by chosen Char, only used with '+' in this project
 split :: Char -> String -> [String]
 split _ "" = []
 split c s = firstWord : (split c rest)
@@ -20,6 +21,14 @@ split c s = firstWord : (split c rest)
 -- Remove all spaces from a string, for easier parsing
 formatSpace :: String -> String
 formatSpace = filter (not . isSpace)
+
+-- Auxiliar function to remove arguments in which their variables is an empty space
+remove_empty :: [Var] -> [Var]
+remove_empty xs = [c | c <- xs, ((fst c) /= ' ')]
+
+-- Wrapper function to apply remove empty to all monoids
+wrapRemEmpty :: Poly -> Poly
+wrapRemEmpty ls = [(fst x, remove_empty (snd x)) | x <- ls]
 
 -- Clever way to parse the polynomial, add an extra '+' before every '-'
 -- so after we split the string by '+', it helps us keep the '-'
@@ -48,12 +57,6 @@ remove_power :: [String] -> [String]
 remove_power  [] = []
 remove_power (x:xs) = (split '^' x) ++ remove_power xs
 
--- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
-parseMonomial :: String -> (Integer, [(Char, Integer)])
-parseMonomial s = case break isAlpha s of 
-        ([], varPows) -> (1, parseUnitMonomial varPows)
-        (coef, varPows) -> (parseCoef coef, parseUnitMonomial varPows) 
-
 -- Parses the coefficient, handling negative values and the absence of coefficient
 parseCoef :: String -> Integer
 parseCoef [] = 1
@@ -62,25 +65,33 @@ parseCoef s
         | (head s == '-') = -1
         | otherwise = read s :: Integer 
 
-handleSmth :: String -> Integer
-handleSmth s
+-- Error proof function to help the absence of digits in the expoent of the monoid
+handle_absence_exp :: String -> Integer
+handle_absence_exp s
         | s == [] = 1
         | otherwise = read s :: Integer
 
+-- Cheeky way to handle all if a monoid is made of multiple variables with the help of zip, like xyz turns into (1, [('x',1),('y',1),('z',1)])
 cheeky_zipper :: (String, String) -> [(Char, Integer)]
 cheeky_zipper (l,p) 
     | (p == "") =  zip l (repeat 1)
     | ((length l) == 1) = [(head l, 1)]
     | otherwise = zip (pop l) (repeat 1)
-    
 
+-- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
+parseMonomial :: String -> (Integer, [(Char, Integer)])
+parseMonomial s = case break isAlpha s of 
+        ([], varPows) -> (1, parseUnitMonomial varPows)
+        (coef, varPows) -> (parseCoef coef, parseUnitMonomial varPows) 
+
+-- Wrapper function that handles all the necessary steps for parsing a the variables of the monoid
 parseUnitMonomial :: String -> [(Char, Integer)]
 parseUnitMonomial [] = []
 parseUnitMonomial l 
         | (l == []) = []
         | (all isAlpha l) = cheeky_zipper (vars,pows)
         | (length (vars) > 1) = (cheeky_zipper (vars,pows)) ++ [(last vars, read_Int (takeWhile (isDigit) (tail fx)))] ++ parseUnitMonomial rest
-        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (tail pows)))] ++ parseUnitMonomial rest
+        | otherwise = [(head vars, handle_absence_exp (takeWhile (isDigit) (tail pows)))] ++ parseUnitMonomial rest
         where 
         (vars, pows) = span isAlpha l
         (fx, rest) = break isAlpha pows
@@ -91,10 +102,11 @@ parse_poly [] = []
 parse_poly s = map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s))))
 
 
--- REVERSE PARSER
+-- REVERSE PARSER ---------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 
-reverse_parser :: Mono -> String 
-reverse_parser (a,b) 
+reverse_ps_monoid :: Mono -> String 
+reverse_ps_monoid (a,b) 
     | (a == 1)  = "+ " ++ parse_variables b
     | (a == -1) = "- " ++ parse_variables b
     | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
@@ -114,5 +126,6 @@ handle_first_plus :: String -> String
 handle_first_plus s 
     | ((head s) == '+') = (drop 2 s)
 
-wrap_reverse_parser :: [Mono] -> String
-wrap_reverse_parser l = handle_first_plus (intercalate " " (map (reverse_parser) l))
+
+reverse_parser :: [Mono] -> String
+reverse_parser l = handle_first_plus (intercalate " " (map (reverse_ps_monoid)  l))
