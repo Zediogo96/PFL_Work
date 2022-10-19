@@ -28,7 +28,7 @@ remove_empty xs = [c | c <- xs, ((fst c) /= ' ')]
 
 -- Wrapper function to apply remove empty to all monoids
 wrapRemEmpty :: Poly -> Poly
-wrapRemEmpty ls = [(fst x, remove_empty (snd x)) | x <- ls]
+wrapRemEmpty ls = [(a, remove_empty b) | (a,b) <- ls]
 
 -- Clever way to parse the polynomial, add an extra '+' before every '-'
 -- so after we split the string by '+', it helps us keep the '-'
