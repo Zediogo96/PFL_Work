@@ -27,8 +27,8 @@ wrap_reverse_parser :: [(Integer, [(Char, Integer)])] -> String
 wrap_reverse_parser l = handle_first_plus (intercalate " " (map (reverse_parser) l))
 
 
-main :: IO() 
+{- main :: IO() 
 main = do
     putStr("\n---- ----- TESTING OVERLOAD ----- ----\n\n")
     print("Esperado: 5*xyz^3 + 10*xy^4 + 5*z^5 - x^2 - 5 - x - xyz - 14*x^2y^4z^55")
-    print("Resultado: " ++ wrap_reverse_parser [(5,[('x',1),('y',1),('z',3)]),(10,[('x',1),('y',4)]),(5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)]),(-1,[('x',1),('y',1),('z',1)]),(-14,[('x',2),('y',4),('z',55)])])
+    print("Resultado: " ++ wrap_reverse_parser [(5,[('x',1),('y',1),('z',3)]),(10,[('x',1),('y',4)]),(5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)]),(-1,[('x',1),('y',1),('z',1)]),(-14,[('x',2),('y',4),('z',55)])]) -}

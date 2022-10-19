@@ -9,13 +9,6 @@ type Poly = (Integer, Char, Integer)
 
 -- TÁ A VOLTARIIIII
 
--- Helper functions, to better allows to use "truples" to represent our monomials
--- ghc STL only supports tuples
-
-fst' (a,_,_) = a
-snd' (_,a,_) = a
-third' (_,_,a) = a
-
 -- (a) 
 
 simplify :: (Num a, Eq b , Eq c) => [(a,b,c)] -> [(a,b,c)]
@@ -37,15 +30,6 @@ poly_sorter l = sortBy ((compare `on` snd') <> (flip compare `on` fst')) l
 simplify_total l = poly_sorter (remove_zeros (simplify l))
 
 -- (b)
-
-{-
-addPoly :: (Num a, Ord b, Eq c) => [(a,b,c)] -> [(a,b,c)] -> [(a,b,c)]
-addPoly [] ys = ys
-addPoly xs [] = xs
-addPoly ((a,b,c):xs) ((d,e,f):ys) 
-    | (b == e && c == f) = ((a+d,b,c):(addPoly xs ys))
-    | otherwise = (a,b,c) : (d,e,f) : (addPoly (drop 1 xs) ys)
--}
 
 addPoly' :: (Num a, Ord b, Eq c) => [(a,b,c)] -> [(a,b,c)] -> [(a,b,c)]
 addPoly' xs ys = simplify (xs ++ ys)
@@ -73,26 +57,18 @@ main = do
     putStr("Polynomials Antes\n")
     print(l1)
     putStr("Polynomial Simplificado:\n")
-    print(simplify l1)
+    print(simplify' l1)
 
     putStr("\n-- Alínea (b) -----------------\n\n")
 
-    let l2 = simplify (parse_poly "5*xyz^3 - 10*y^4 - 5*z^5 - x^2 - 5 - x + 30*y^4")
-
-    putStr("Polynomials Antes\n")
-    print(l1)
-    print(l2)
-    putStr("Somado:\n")    
-    print(addPoly' l1 l2)
-
-    putStr("\n-- Alínea (c) -----------------\n\n")
+        putStr("\n-- Alínea (c) -----------------\n\n")
 
     putStr("\n-- Alínea (d) -----------------\n\n")
     
     putStr("Polynomials Antes\n")
-    print(l2)
+    
     putStr("Derivado:\n")    
-    print(derivePoly l2)
+    
 
 
 

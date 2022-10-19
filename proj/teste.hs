@@ -1,51 +1,78 @@
-import Data.Char (isSpace, isLetter, isAlpha, isDigit)
+import PolyParser
+import ReverseParser
 
-parseMonomial :: String -> (Integer, [(Char, Integer)])
-parseMonomial s = case break isAlpha s of 
-        ([], varPows) -> (1, parseUnitMonomial varPows)
-        (coef, varPows) -> (parseCoef coef, parseUnitMonomial varPows) 
+import Data.List(nub, sort, group, groupBy, partition, sortBy)
+import Data.Function
 
+-- 5xy^3 + y-> [(5, [('x',1), ('y', 3)]), (1, [('y'], 1)]
+type Poly = [(Integer, [(Char, Integer)])]
 
-parseCoef :: String -> Integer
-parseCoef [] = 1
-parseCoef s 
-        | ((head s == '-')) = negate (read (drop 1 s) :: Integer)
-        | otherwise = read s :: Integer 
+simplify' :: Poly -> Poly
+simplify' [] = []
+simplify' (x:xs) = [(fst x + vs, snd x)] ++ simplify' resto
+    where 
+        vs = sum (map (fst) ks)
+        (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
+        -- resto = filter (\y -> (lisEquals (snd x) (snd y) == False)) xs
 
-handleSmth :: String -> Integer
-handleSmth s
-        | s == [] = 1
-        | otherwise = read s :: Integer
+addPoly' :: Poly -> Poly -> Poly 
+addPoly' xs ys = simplify' (xs ++ ys)
 
-cheeky_zipper :: String -> [(Char, Integer)]
-cheeky_zipper l = (zip (take (length l) l) (repeat 1))
+sumByKey :: (Eq k, Num v) => [(k, v)] -> [(k, v)]
+sumByKey []         = []
+sumByKey ((k,v):xs) = (k,v + sum vs) : sumByKey bs
+  where
+    vs       = map snd ks
+    (ks, bs) = partition ((k ==) . fst) xs
 
-read_Int :: String -> Integer
-read_Int s = read s :: Integer 
+interweave :: [(a,b)] -> [(a,b)] -> [a]
+interweave [] [] = []
+interweave [] ys = [fst (head ys)]
+interweave xs [] = [fst (head xs)]
+interweave (x:xs) (y:ys) = (fst x) : (fst y) : interweave xs ys
 
-parseUnitMonomial :: String -> [(Char, Integer)]
-parseUnitMonomial [] = []
-parseUnitMonomial l 
-        | (l == []) = []
-        | (all isAlpha l) = cheeky_zipper vars
-        | (length (vars) > 1) = (cheeky_zipper vars) ++ [(last vars, read_Int (takeWhile (isDigit) fx))] ++ parseUnitMonomial rest
-        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (drop 1 pows)))] ++ parseUnitMonomial rest
-        where 
-        (vars, pows) = span isAlpha l
-        (fx, rest) = break isAlpha pows
+count :: [(Char, Integer)] -> Char -> Integer
+count xs x = case lookup x xs of
+  Nothing -> 0 -- x is not in the list
+  Just n  -> n -- x is in the list associated with n
+
+-- Extract all keys by taking the first value in each pair
+keys :: [(Char, Integer)] -> [Char]
+keys xs = map fst xs 
+
+-- Extract the union of all keys of two lists
+allKeys :: [(Char, Integer)] -> [(Char, Integer)] -> [Char]
+allKeys xs ys = nub (keys xs ++ keys ys)
+
+lisEquals :: [(Char, Integer)] -> [(Char, Integer)] -> Bool
+lisEquals xs ys = all test (allKeys xs ys) 
+  where
+    -- Check that a key maps to the same value in both lists
+    test k = count xs k == count ys k
+
+-- Auxiliar function to remove arguments that their first element is equal to zero
+remove_zeros :: Poly -> Poly
+remove_zeros xs = [c | c <- xs, (fst c /= 0)]
+
+-- Sort by order of first element and then comparing the first
+poly_sorter l = sortBy (flip compare `on` fst) l --((compare `on` (snd) <> 
+
+-- Wrapper Function for the complete treatment of polynomial
+simplify_total l = poly_sorter (remove_zeros (simplify' l))
+
+derive (x:xs) a = 
+  
+[(x * z, y, z - 1) | (x,y,z) <- xs]
 
 main :: IO() 
 main = do
-    putStr("\n-- TESTING ----------------------------------------\n")
---     print(break isAlpha "-5yz^2")
+    print(derive )
+    putStr("\n-- Alínea (a) -----------------\n\n")
 
-    putStr("\n-- RANDOM TESTING ON THE WAE ---------------------\n")
-    let s1 = "5y^3x^2z^4k"
-    let s2 = "5xyz^3"
-    print("Original Poly s1", s1)
-    print("After parsing s1", parseMonomial s1)
-    print("Original Poly s2", s2)
-    print("After parsing s2", parseMonomial s2)
-
-
+    let p1 = [(5,[('x',1),('y',1),('z',3)]),(20,[('y',4)]),(-5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)])]
+    print(simplify_total p1)
     
+    putStr("\n-- Alínea (b) -----------------\n\n")
+    let p2 = [(10,[('x',1),('y',1),('z',3)]),(-20,[('y',4)]),(-5,[('z',5)]),(-1,[('x',2)]),(-5,[]),(-1,[('x',1)])]
+    let p3 = addPoly' p1 p2
+    print(remove_zeros p3)  

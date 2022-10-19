@@ -87,11 +87,11 @@ parse_poly :: String -> [(Integer, [(Char, Integer)])]
 parse_poly [] = []
 parse_poly s = map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s))))
 
-main :: IO() 
+{- main :: IO() 
 main = do
     putStr("\n---- ----- TESTING OVERLOAD ----- ----\n\n")
 
     print(parse_poly "5*xyz^3 + 10*xy^4 + 5*z^5 - x^2 - 5 - x - xyz - 14*x^2y^4z^55")
-    print(parse_poly "xyz")
+    print(parse_poly "xyz") -}
 
 
