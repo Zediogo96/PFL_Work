@@ -5,12 +5,19 @@ import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 
 main :: IO() 
 main = do
-    let h1 = parsePoly "-4x^3 + 6x^2 + 2x"
-    print h1
-    print(wrap_reverse_parser (multiply_Poly h1 h1))
-    print(wrap_reverse_parser (addPoly h1 h1))
 
-   {-  putStr("\n-- TESTING PARSER -----------------\n\n")
+    -- takeWhile is digit or -
+    let a = takeWhile (\x -> isDigit x || x == '-' || x == ')' || x == '(') "x^(-2)"
+    print(a)
+
+
+    let h1 = parsePoly "-4x^-3 + 6x^2 + 2x"
+
+    let h2 = [(3,[('x',-4)]),(-1,[('y',-4)]),(5,[])]
+    print (wrap_reverse_parser (addPoly h2 h2))
+
+
+    putStr("\n-- TESTING PARSER -----------------\n\n")
     let t1 = parsePoly "-1 + 3x^4 - 1"
     let t2 = parsePoly "2 - 3x^4 - 5y^4"
     let t3 = parsePoly "5 + 1 + 2"
@@ -55,4 +62,3 @@ main = do
     let d2 = derive d1 'x'
     let d3 = wrap_reverse_parser d2
     print(d3)
- -}

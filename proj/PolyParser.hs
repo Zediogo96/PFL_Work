@@ -7,6 +7,10 @@ type Var = (Char, Integer)
 type Mono = (Integer, [Var])
 type Poly = [Mono]
 
+
+-- NORMAL PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 -- Wrapper function just to make the process of reading an integer less verbose on another functions
 read_Int :: String -> Integer
 read_Int s = read s :: Integer 
@@ -67,20 +71,24 @@ parseCoef s
         | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
         | otherwise = read s :: Integer 
 
+-- Parses the variables and their powers, handling the absence of power zipping every variable with 1
 cheeky_zipper :: (String, String) -> [(Char, Integer)]
 cheeky_zipper (l,p) 
     | (p == "") =  zip l (repeat 1)
     | ((length l) == 1) = [(head l, 1)]
     | otherwise = zip (pop l) (repeat 1)
 
+-- Handles cases for parseUnitMonomial where reading expoents returns an empty string, returns 1
 handleSmth :: String -> Integer
 handleSmth s
-        | s == [] = 
+        | s == [] = 1
         | otherwise = read s :: Integer
 
+-- Safer version of the tail funcions
 safe_tail :: [a] -> [a]
 safe_tail [] = []
 safe_tail xs = tail xs
+
 
 parseUnitMonomial :: String -> [Var]
 parseUnitMonomial [] = []
@@ -98,19 +106,23 @@ parsePoly :: String -> Poly
 parsePoly [] = []
 parsePoly s = remove_zeros (map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s)))))
 
--- REVERSE PARSER
-
-reverse_parser :: Mono -> String 
-reverse_parser (a,b) 
-    | (a == 1)  = "+ 1" ++ parse_variables b
-    | (a == -1) = "- 1" ++ parse_variables b
-    | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
-    | otherwise = "+ " ++ (show a) ++ parse_variables b
+-- REVERSE PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 parse_variables :: [(Char, Integer)] -> String
 parse_variables [] = ""
 parse_variables (x:xs) = [(fst x)] ++ parse_var (snd x) ++ parse_variables xs
 
+-- Handles the parsing of a Monoid with extra care to present it nicely in a String
+reverse_parser :: Mono -> String 
+reverse_parser (a,b) 
+    | (a == 1)  = "+ 1" ++ parse_variables b
+    | (a == 1 && b /= [])  = "+ " ++ parse_variables b
+    | (a == -1) = "- 1" ++ parse_variables b
+    | (a == -1 && b /= []) = "- " ++ parse_variables b
+    | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
+    | otherwise = "+ " ++ (show a) ++ parse_variables b
+       
 parse_var :: Integer -> String
 parse_var i
     | i == 1 = ""
