@@ -7,6 +7,9 @@ type Var = (Char, Integer)
 type Mono = (Integer, [Var])
 type Poly = [Mono]
 
+-- NORMAL PARSER ---------------------------------------------------------------------
+---------------------------------------------------------------------------------------
+
 -- Helper function just to make the process of reading an integer less verbose on another functions
 read_Int :: String -> Integer
 read_Int s = read s :: Integer 
@@ -22,13 +25,9 @@ split c s = firstWord : (split c rest)
 formatSpace :: String -> String
 formatSpace = filter (not . isSpace)
 
--- Auxiliar function to remove arguments in which their variables is an empty space
-remove_empty :: [Var] -> [Var]
-remove_empty xs = [c | c <- xs, ((fst c) /= ' ')]
-
 -- Wrapper function to apply remove empty to all monoids
-wrapRemEmpty :: Poly -> Poly
-wrapRemEmpty ls = [(a, remove_empty b) | (a,b) <- ls]
+remove_empty :: Poly -> Poly
+remove_empty ls = [(a, [c | c <- b, ((fst c) /= ' ')]) | (a,b) <- ls]
 
 -- Clever way to parse the polynomial, add an extra '+' before every '-'
 -- so after we split the string by '+', it helps us keep the '-'
@@ -100,7 +99,6 @@ parseUnitMonomial l
 parse_poly :: String -> [(Integer, [(Char, Integer)])]
 parse_poly [] = []
 parse_poly s = map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s))))
-
 
 -- REVERSE PARSER ---------------------------------------------------------------------
 ---------------------------------------------------------------------------------------

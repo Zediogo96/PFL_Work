@@ -15,8 +15,8 @@ simp (x:xs) = [(fst x + vs, snd x)] ++ simp resto
         vs = sum (map (fst) ks)
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
 
-addPoly' :: Poly -> Poly -> Poly 
-addPoly' xs ys = simp (xs ++ ys)
+addPoly :: Poly -> Poly -> Poly 
+addPoly xs ys = simp (xs ++ ys)
 
 sumByKey :: (Eq k, Num v) => [(k, v)] -> [(k, v)]
 sumByKey []         = []
