@@ -91,8 +91,11 @@ parseMonomialVars s = [(safe_head var, extractExp tst)] ++ parseMonomialVars res
         (tst, rest) = ((takeWhile (\n -> (isDigit n) || ((`elem` "-()^")) n) rem), (dropWhile(\n -> (isDigit n) || ((`elem` "-()^")) n) rem))
 
 -- By using simplify minus, with the case of negative expoent (-2), would end up like (+-2), and that was not initially intended, this works it around
-filterPattern :: String -> String
-filterPattern s = filter (not . (`elem` "(+-)")) s
+replacePattern :: String -> String
+replacePattern [] = []
+replacePattern ('(':'+':'-':a:')':xs) = '(':'-':a:')': replacePattern xs
+replacePattern (x:xs) = x:replacePattern xs
+
 
 -- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
 parseMonomial :: String -> (Integer, [(Char, Integer)])
@@ -103,10 +106,11 @@ parseMonomial s = case break isAlpha s of
 
 parsePoly :: String -> Poly
 parsePoly [] = []
-parsePoly s = remove_zeros (map (parseMonomial) (remove_plus (remove_mult (filterPattern ((simplify_minus (formatSpace s)))))))
+parsePoly s = remove_zeros (map (parseMonomial) (remove_plus (remove_mult (replacePattern ((simplify_minus (formatSpace s)))))))
 
 main :: IO() 
 main = do
+    print((simplify_minus (formatSpace "x^(-2)y^3")))
 
     putStrLn "########## RANDOM TESTING #############"
     let t1 = "x^(-2)y^3"
@@ -114,11 +118,9 @@ main = do
     let (var, rem) = (takeWhile (isAlpha) t1, dropWhile (isAlpha) t1)
     let (tst, rest) = ((takeWhile (\n -> (isDigit n) || ((`elem` "-()^")) n) rem), (dropWhile(\n -> (isDigit n) || ((`elem` "-()^")) n) rem))
 
-    print(var, rem)
-    print(tst, rest)
-
     putStrLn "########## SERIOUS TESTING #############"
 
+    print(replacePattern "x^(+-2)y^3")
     print(parsePoly "x^2y^3")
     print(parsePoly "x^(-2)y^3")
 
