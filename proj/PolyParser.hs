@@ -63,8 +63,8 @@ parseMonomial s = case break isAlpha s of
 parseCoef :: String -> Integer
 parseCoef [] = 1
 parseCoef s 
-        | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
         | (head s == '-') = -1
+        | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
         | otherwise = read s :: Integer 
 
 cheeky_zipper :: (String, String) -> [(Char, Integer)]
@@ -75,33 +75,35 @@ cheeky_zipper (l,p)
 
 handleSmth :: String -> Integer
 handleSmth s
-        | s == [] = 0
+        | s == [] = 
         | otherwise = read s :: Integer
-    
 
-parseUnitMonomial :: String -> [(Char, Integer)]
+safe_tail :: [a] -> [a]
+safe_tail [] = []
+safe_tail xs = tail xs
+
+parseUnitMonomial :: String -> [Var]
 parseUnitMonomial [] = []
 parseUnitMonomial l 
         | (l == []) = []
         | (all isAlpha l && (length l > 1)) = cheeky_zipper (vars,pows)
         | (length (vars) > 1) = (cheeky_zipper (vars,pows)) ++ [(last vars, read_Int (takeWhile (isDigit) (tail fx)))] ++ parseUnitMonomial rest
-        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (tail pows)))] ++ parseUnitMonomial rest
+        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (safe_tail pows)))] ++ parseUnitMonomial rest
         where 
         (vars, pows) = span isAlpha l
         (fx, rest) = break isAlpha pows
 
 -- Wrapper function for all the functions necessary to the parser
-parsePoly :: String -> [(Integer, [(Char, Integer)])]
+parsePoly :: String -> Poly
 parsePoly [] = []
 parsePoly s = remove_zeros (map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s)))))
-
 
 -- REVERSE PARSER
 
 reverse_parser :: Mono -> String 
 reverse_parser (a,b) 
     | (a == 1)  = "+ 1" ++ parse_variables b
-    | (a == -1) = "- " ++ parse_variables b
+    | (a == -1) = "- 1" ++ parse_variables b
     | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
     | otherwise = "+ " ++ (show a) ++ parse_variables b
 
