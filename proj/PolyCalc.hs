@@ -3,9 +3,7 @@ module PolyCalc where
 import Data.List(nub, sort, group, groupBy, partition, sortBy, sortOn)
 import Data.Function
 
-type Var = (Char, Integer)
-type Mono = (Integer, [Var])
-type Poly = [Mono]
+import PolyParser
 
 -- 5xy^3 + y-> [(5, [('x',1), ('y', 3)]), (1, [('y'], 1)]
 simp :: Poly -> Poly
@@ -16,7 +14,7 @@ simp (x:xs) = [(fst x + vs, snd x)] ++ simp resto
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
 
 addPoly :: Poly -> Poly -> Poly 
-addPoly xs ys = simp (xs ++ ys)
+addPoly xs ys = (remove_exp_zero (remove_zeros( simp (xs ++ ys))))
 
 sumByKey :: (Eq k, Num v) => [(k, v)] -> [(k, v)]
 sumByKey []         = []
@@ -45,22 +43,29 @@ allKeys :: [Var] -> [Var] -> [Char]
 allKeys xs ys = nub (keys xs ++ keys ys)
 
 lisEquals :: [Var] -> [Var] -> Bool
+lisEquals [] [] = True
 lisEquals xs ys = all test (allKeys xs ys) 
   where
     -- Check that a key maps to the same value in both lists
     test k = count xs k == count ys k
 
--- Auxiliar function to remove arguments that their first element is equal to zero
-remove_zeros :: Poly -> Poly
-remove_zeros xs = [c | c <- xs, (fst c /= 0)]
+-- 
+remove_exp_zero :: Poly -> Poly
+remove_exp_zero xs = [(a, [c | c <- b, ((snd c) /= 0)]) | (a,b) <- xs]
 
--- Sort by order of first element and then comparing the first
-poly_sorter l = sortBy (flip compare `on` fst) l --((compare `on` (snd) <> 
+-- Returns max expoent of a list of variables 
+max_exp :: [Var] -> Integer
+max_exp [] = 0
+max_exp l = foldr1 (\x y ->if x >= y then x else y) (map (snd) l) 
+
+-- Sort by order of the maximum expoent of the Polynomial and if it's equal sort by it's coefficient
+poly_sorter :: Poly -> Poly
+poly_sorter l = sortBy ((flip compare `on` max_exp . snd) <> (flip compare `on` fst)) l
 
 -- Wrapper Function for the complete treatment of polynomial
-simplify l = poly_sorter (remove_zeros (simp l))
+simplify l = (remove_exp_zero (poly_sorter (remove_zeros (simp l))))
 
-helper_func :: [Var] -> (Char,Integer)
+helper_func :: [Var] -> Var
 helper_func [] = (' ',1)
 helper_func l = head l
 
@@ -72,10 +77,6 @@ derive (x:xs) c = (coef, (fst to_derive, (snd (to_derive) - 1)) : diff) : derive
     (equal, diff) = partition (\(a,b) -> (a == c)) (snd x)
     to_derive = helper_func equal
     coef = (fst x) * ((snd to_derive))
-
-flt_empty :: [Var] -> [(Char,Integer)]
-flt_empty [] = []
-flt_empty x = filter (\(a,b) -> a /= ' ') x
 
 multiply_monoid :: Mono -> Mono -> Mono
 multiply_monoid x y = (coef, sumThem (variables))
@@ -91,10 +92,4 @@ sumThem = map sumGroup . groupBy fstEq . sortOn fst
 
 
 multiply_Poly :: Poly -> Poly -> Poly
-multiply_Poly l1 l2 = concatMap (\x -> map (\y -> multiply_monoid x y) l1) l2
-
-{-
--- Sort by order of first element and then comparing the first
-poly_sorter l = sortBy ((compare `on` snd') <> (flip compare `on` fst')) l
- -}
-  
+multiply_Poly l1 l2 = (remove_exp_zero (concatMap (\x -> map (\y -> multiply_monoid x y) l1) l2))
