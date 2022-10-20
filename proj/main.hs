@@ -1,46 +1,48 @@
 import PolyCalc
 import PolyParser
 
-import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
+normalize = do 
+    putStrLn "\nNormalize a Polynomial\nPlease input a polynomial of your choice:\n"
+    user_polystring <- getLine
+    let ret = reverse_parser(simplify(parsePoly (user_polystring)))
+    putStrLn ("Your simplified polynomial is: \n" ++ ret ++ "\n" ++ "Type 0 to return to the menu \nPress any other key to try again ")  
+    user_choice <- getLine
+    if user_choice == "0" then main else normalize
+
+derivate = do 
+    putStrLn "\nDerivate a Polynomial\nPlease input a polynomial of your choice:\n"
+    user_polystring <- getLine
+    putStrLn "\nInput the variable you wish to derivate:\n"
+    user_derivar <- getLine
+    let ret = reverse_parser(derive (parsePoly (user_polystring)) (head user_derivar))
+    putStrLn ("\nThe derivate of your polynomial in order to " ++ user_derivar ++ " is: " ++ ret ++ "\n" ++ "Type 0 to return to the menu \nPress any other key to try again") 
+    user_choice <- getLine
+    if user_choice == "0" then main else derivate
+
+add = do 
+    putStrLn "\nAdd Polynomials\nPlease input a polynomial of your choice:\n"
+    user_polystring1 <- getLine
+    putStrLn "\nPlease input a polynomial of your choice:\n"
+    user_polystring2 <- getLine
+    let ret = reverse_parser (addPoly (parsePoly (user_polystring1)) (parsePoly (user_polystring2))) 
+    putStrLn ("\nThe sum of your polynomials is: " ++ ret ++ " \n" ++ "Type 0 to return to the menu \nPress any other key to try again ")
+    user_choice <- getLine
+    if user_choice == "0" then main else add
+
+
+multiply = do 
+    putStrLn "\nMultiply Polynomials\nPlease input a polynomial of your choice:\n"
+    user_polystring1 <- getLine
+    putStrLn "Please input a polynomial of your choice:\n"
+    user_polystring2 <- getLine
+    let ret = reverse_parser (multiply_Poly (parsePoly (user_polystring1)) (parsePoly (user_polystring2)))
+    putStrLn ("The product of your polynomials is: " ++ ret ++ " \n" ++ "Type 0 to return to the menu \nPress any other key to try again ")
+    user_choice <- getLine
+    if user_choice == "0" then main else multiply
+    
 
 main :: IO() 
 main = do
 
-    putStr("\n-- TESTING PARSER -----------------\n\n")
-    let t1 = parsePoly "-1 + 3x^4"
-    let t2 = parsePoly "2 - 3x^4 - 5y^4"
-    let t3 = parsePoly "5 + 1 + 2"
-    
-    print(t1)
-    print(t2)
-    print(t3)
-
-    putStr("\n-- REVERSE PARSER -----------------\n\n")
-    let r1 = reverse_parser t1
-    let r2 = reverse_parser t2
-    let r3 = reverse_parser t3
-
-    print(r1)
-    print(r2)
-    print(r3)
-
-    putStr("\n-- TESTING SIMPLIFY -----------------\n\n")
-    let t2 = parsePoly "5 + 3x^4 - 5y^4"
-    print(simplify t2)
-
-    putStr("\n-- TESTING ADDITION -----------------\n\n")
-    let a4 = parsePoly "2 - 3x^4"
-    let a5 = parsePoly "-1 + 3x^4"
-
-    print(addPoly a4 a5)
-    print(reverse_parser (addPoly a4 a5))
- 
-    putStr("\n-- TESTING MULTIPLY -----------------\n\n")
-    let m1 = multiply_Poly [(5,[('x',1),('y',1),('z',3)]), (5,[('x',1),('y',1),('z',3)])] [(2,[('x',3),('y',1)]), (1,[('x',3)])]
-    let m2 = reverse_parser m1
-    print(m2)
-
-    putStr("\n-- TESTING DERIVE -----------------\n\n")
-    let d1 = remove_exp_zero(derive [(5,[('x',1),('y',1),('z',3)]), (5,[('x',1),('y',1),('z',5)])] 'x')
-    let d2 = reverse_parser d1
-    print(d2)
+    putStrLn "\nWelcome to Haskell Polynomials!\n"
+    putStrLn "What would you like to do?\n \n Simplify a polynomial - Type \"normalize\"\n Add polynomials - Type \"add\"\n Multiply polynomials - Type \"multiply\"\n Derivate a polynomial - Type \"derivate\"\n"
