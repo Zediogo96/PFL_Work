@@ -60,6 +60,11 @@ safe_head :: String -> Char
 safe_head [] = ' '
 safe_head xs = head xs
 
+-- safe version of tail, adapted to our needs
+safe_tail :: String -> String
+safe_tail [] = []
+safe_tail xs = tail xs
+
 -- Parses the coefficient, handling negative values and the absence of coefficient
 parseCoef :: String -> Integer
 parseCoef [] = 1
@@ -68,10 +73,17 @@ parseCoef s
         | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
         | otherwise = read s :: Integer
 
+-- turn string into list of tuple with every second element as 1
+parseVar :: String -> [Var]
+parseVar [] = []
+parseVar s = [(safe_head s, 1)] ++ parseVar (safe_tail s)
+
 -- Converts a String containing only content for variables and converts into a list of [(Char, Integer)] -> e.g "xy"
 parseMonomialVars :: String -> [Var]
 parseMonomialVars [] = []
-parseMonomialVars s = [(safe_head var, extractExp tst)] ++ parseMonomialVars rest
+parseMonomialVars s 
+    | ((all isAlpha rem) && (rem == [])) =  parseVar var ++ parseMonomialVars rem
+    | otherwise = [(safe_head var, extractExp tst)] ++ parseMonomialVars rest
     where 
         (var, rem) = (takeWhile (isAlpha) s, dropWhile (isAlpha) s)
         (tst, rest) = ((takeWhile (\n -> (isDigit n) || ((`elem` "-()^")) n) rem), (dropWhile(\n -> (isDigit n) || ((`elem` "-()^")) n) rem))

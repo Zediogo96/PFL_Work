@@ -13,35 +13,16 @@ simp (x:xs) = [(fst x + vs, snd x)] ++ simp resto
         vs = sum (map (fst) ks)
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
 
--- Sum Variables that have the same key
-sumByKey :: (Eq k, Num v) => [(k, v)] -> [(k, v)]
-sumByKey []         = []
-sumByKey ((k,v):xs) = (k,v + sum vs) : sumByKey bs
-  where
-    vs       = map snd ks
-    (ks, bs) = partition ((k ==) . fst) xs
+-- sort by first element of tuple of var (Char)
+sortVar :: [Var] -> [Var]
+sortVar [] = []
+sortVar (x:xs) = sortVar (filter (\y -> (fst y) < (fst x)) xs) ++ [x] ++ sortVar (filter (\y -> (fst y) >= (fst x)) xs)
 
--- Counts the number of times a variable appears in a list of variables
-count :: [Var] -> Char -> Integer
-count xs x = case lookup x xs of
-  Nothing -> 0 -- x is not in the list
-  Just n  -> n -- x is in the list associated with n
-
--- Extract all keys by taking the first value in each pair
-keys :: [Var] -> [Char]
-keys xs = map fst xs 
-
--- Extract the union of all keys of two lists
-allKeys :: [Var] -> [Var] -> [Char]
-allKeys xs ys = nub (keys xs ++ keys ys)
-
--- Checks if two lists are equal, by checking the number of different variables
+-- check if two lists of vars are the same
 lisEquals :: [Var] -> [Var] -> Bool
 lisEquals [] [] = True
-lisEquals xs ys = all test (allKeys xs ys) 
-  where
-    -- Check that a key maps to the same value in both lists
-    test k = count xs k == count ys k
+lisEquals (x:xs) (y:ys) = if ((fst x) == (fst y) && (snd x) == (snd y)) then lisEquals xs ys else False
+lisEquals _ _ = False
 
 -- Removes variables from a Polynomial that have a power of zero
 remove_exp_zero :: Poly -> Poly
