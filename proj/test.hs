@@ -16,9 +16,9 @@ main = do
 
     putStr("\n#### PARSER TESTING ################### \n\n")
 
-    let p1 = "1 - 1 + 3x^4 - 3x^4 + 12x^(-2) - 44z^(-2)y^4z^2"
-    let p2 = "2 - 3x^4 - 5y^4"
-    let p3 = "5 + 1 + 2"
+    let p1 = "3x^4 - 3x^4 - 44z^(-2)y^4z^2 + 1 - 1 + 12x^(-2)"
+    let p2 = "3x^4 - 5y^4 + 2 - 1"
+    let p3 = "5 + 2 + 1"
 
     let t1 = parsePoly p1
     let t2 = parsePoly p2
@@ -129,12 +129,12 @@ main = do
     putStr("\n#### TESTING DERIVE ################### \n\n")
 
     let d1 = parsePoly "2x + 2x^(-2)y"
-    let deriv1 = derive d1 'x'
+    let deriv1 = derivePoly d1 'x'
     let rev_deriv1 = reverseParser deriv1
     let exp_rev_deriv1 = "- 4x^(-3)y + 2"
 
     let d2 = parsePoly "2x + 2x"
-    let deriv2 = derive d2 'x'
+    let deriv2 = derivePoly d2 'x'
     let rev_deriv2 = reverseParser deriv2
     let exp_rev_deriv2 = "4"
 

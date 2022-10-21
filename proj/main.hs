@@ -14,7 +14,7 @@ derivate = do
     user_polystring <- getLine
     putStrLn "\nInput the variable you wish to derivate:\n"
     user_derivar <- getLine
-    let ret = reverseParser(derive (parsePoly (user_polystring)) (head user_derivar))
+    let ret = reverseParser(derivePoly (parsePoly (user_polystring)) (head user_derivar))
     putStrLn ("\nThe derivate of your polynomial in order to " ++ user_derivar ++ " is: " ++ ret ++ "\n" ++ "Type 0 to return to the menu \nPress any other key to try again") 
     user_choice <- getLine
     if user_choice == "0" then main else derivate

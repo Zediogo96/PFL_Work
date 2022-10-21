@@ -1,14 +1,14 @@
 module PolyCalc where
 
-import Data.List(nub, sort, group, groupBy, partition, sortBy, sortOn)
-import Data.Function
+import Data.List(nub, sort, group, groupBy, partition, sortBy, sortOn, intercalate)
+
 
 import PolyParser
 
 -- Simplifies two polinomials, adding of the ones who have the exact same variables 
-simp :: Poly -> Poly
-simp [] = []
-simp (x:xs) = [(fst x + vs, snd x)] ++ simp resto
+simplify' :: Poly -> Poly
+simplify' [] = []
+simplify' (x:xs) = [(fst x + vs, snd x)] ++ simplify' resto
     where 
         vs = sum (map (fst) ks)
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
@@ -28,27 +28,18 @@ lisEquals _ _ = False
 remove_exp_zero :: Poly -> Poly
 remove_exp_zero xs = [(a, [c | c <- b, ((snd c) /= 0)]) | (a,b) <- xs]
 
--- Returns max expoent of a list of variables 
-max_exp :: [Var] -> Integer
-max_exp [] = 0
-max_exp l = foldr1 (\x y ->if x >= y then x else y) (map (snd) l) 
+-- Simplifies the process of extracting the list of Vars to derive
+to_derivePoly' :: [Var] -> Var
+to_derivePoly' [] = (' ',1)
+to_derivePoly' l = head l
 
--- Sort by order of the maximum expoent of the Polynomial and if it's equal sort by it's coefficient
-poly_sorter :: Poly -> Poly
-poly_sorter l = sortBy ((flip compare `on` max_exp . snd) <> (flip compare `on` fst)) l
-
-helper_func :: [Var] -> Var
-helper_func [] = (' ',1)
-helper_func l = head l
-
--- Derives a polynomial using a chosen Variable
-derive' :: Poly -> Char -> Poly
-derive' [] _ = []
-derive' (x:xs) c = (coef, (fst to_derive', (snd (to_derive') - 1)) : diff) : derive' xs c
+-- derivePolys a polynomial using a chosen Variable
+derivePoly' :: Poly -> Char -> Poly
+derivePoly' [] _ = []
+derivePoly' (x:xs) c = (coef, (fst (to_derivePoly' equal), (snd (to_derivePoly' equal) - 1)) : diff) : derivePoly' xs c
   where 
     (equal, diff) = partition (\(a,b) -> (a == c)) (snd x)
-    to_derive' = helper_func equal
-    coef = (fst x) * ((snd to_derive'))
+    coef = (fst x) * ((snd (to_derivePoly' equal)))
  
 -- Multiplies two monomials
 multiply_monoid :: Mono -> Mono -> Mono
@@ -75,11 +66,11 @@ multiplyPoly' l1 l2 = (remove_exp_zero (concatMap (\x -> map (\y -> multiply_mon
 
 -- Polynomial Simplification
 simplify :: Poly -> Poly
-simplify l = (remove_exp_zero (poly_sorter (remove_zeros (simp l))))
+simplify l = (remove_exp_zero (poly_sorter (remove_zeros (simplify' l))))
 
 -- Polynomial Addition 
 addPoly :: Poly -> Poly -> Poly 
-addPoly xs ys = simplify (remove_exp_zero (remove_zeros( simp (xs ++ ys))))
+addPoly xs ys = simplify (remove_exp_zero (remove_zeros( simplify' (xs ++ ys))))
 
 
 -- Polynomial Multiplication
@@ -87,5 +78,5 @@ multiplyPoly :: Poly -> Poly -> Poly
 multiplyPoly p1 p2 = simplify (multiplyPoly' p1 p2)
 
 --Polynomial derivation according to a variable
-derive :: Poly -> Char -> Poly
-derive l c = simplify (derive' l c)
+derivePoly :: Poly -> Char -> Poly
+derivePoly l c = simplify (derivePoly' l c)

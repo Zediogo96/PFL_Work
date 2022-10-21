@@ -1,10 +1,21 @@
 module PolyParser where
 import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
+import Data.Function
 import Data.List
+
 
 type Var = (Char, Integer)
 type Mono = (Integer, [Var])
 type Poly = [Mono]
+
+-- Returns max expoent of a list of variables 
+max_exp :: [Var] -> Integer
+max_exp [] = 0
+max_exp l = foldr1 (\x y ->if x >= y then x else y) (map (snd) l) 
+
+-- Sort by order of the maximum expoent of the Polynomial and if it's equal sort by it's coefficient
+poly_sorter :: Poly -> Poly
+poly_sorter l = sortBy ((flip compare `on` max_exp . snd) <> (flip compare `on` fst)) l
 
 -- NORMAL PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,4 +164,4 @@ parsePoly s = remove_zeros (map (parseMonomial) (remove_plus (remove_mult (repla
 
 -- Converts a Polynomial back into a String
 reverseParser :: Poly -> String
-reverseParser l = handle_first_plus (intercalate " " (map (reverseMono) l))
+reverseParser l = handle_first_plus (intercalate " " (map (reverseMono) (poly_sorter l)))
