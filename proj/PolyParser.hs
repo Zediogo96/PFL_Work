@@ -1,5 +1,4 @@
 module PolyParser where
-
 import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 import Data.List
 
@@ -7,28 +6,15 @@ type Var = (Char, Integer)
 type Mono = (Integer, [Var])
 type Poly = [Mono]
 
-
 -- NORMAL PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Remove all spaces from a string, for easier parsing
+formatSpace :: String -> String
+formatSpace = filter (not . isSpace)
 
 -- Wrapper function just to make the process of reading an integer less verbose on another functions
 read_Int :: String -> Integer
 read_Int s = read s :: Integer 
-
--- Slipts lists by chosen Char, only used with '+' in this project
-split :: Char -> String -> [String]
-split _ "" = []
-split c s = firstWord : (split c rest)
-    where firstWord = takeWhile (/=c) s
-          rest = drop (length firstWord + 1) s
-
--- Auxiliar function to remove arguments that their first element is equal to zero
-remove_zeros :: Poly -> Poly
-remove_zeros xs = [c | c <- xs, (fst c /= 0)]
-
--- Remove all spaces from a string, for easier parsing
-formatSpace :: String -> String
-formatSpace = filter (not . isSpace)
 
 -- Clever way to parse the polynomial, add an extra '+' before every '-'
 -- so after we split the string by '+', it helps us keep the '-'
@@ -39,100 +25,120 @@ simplify_minus (x:xs)
         | x == '-' = "+-" ++ simplify_minus xs
         | otherwise =  x : simplify_minus xs
 
--- Removes first element from list without blowing up if the list is empty (like regular init)
-pop :: [a] -> [a]
-pop [] = []
-pop xs = init xs
+-- Removes multiplication on a string
+remove_mult :: String -> String
+remove_mult l = filter (/='*') l
+
+-- Slipts lists by chosen Char, only used with '+' in this project
+split :: Char -> String -> [String]
+split _ "" = []
+split c s = firstWord : (split c rest)
+    where firstWord = takeWhile (/=c) s
+          rest = drop (length firstWord + 1) s
 
 -- Splits an String by occurrences of '+' and creates a list of those sub-strings
 remove_plus :: String -> [String]
 remove_plus s =  split '+' s
 
--- Removes multiplication on substrings
-remove_mult :: [String] -> [String]
-remove_mult l = map (filter (not . (=='*'))) l 
+-- Auxiliar function to remove arguments that their first element is equal to zero
+remove_zeros :: Poly -> Poly
+remove_zeros xs = [c | c <- xs, (fst c /= 0)]
 
--- Function used to separate a variable that has an power. This translates ["y^2] to [["y", "2"]] 
-remove_power :: [String] -> [String]
-remove_power  [] = []
-remove_power (x:xs) = (split '^' x) ++ remove_power xs
+-- filter parenthesis from string
+filReqSymbols :: String -> String
+filReqSymbols s = filter (not . (`elem` "()^")) s
 
--- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
-parseMonomial :: String -> (Integer, [(Char, Integer)])
-parseMonomial s = case break isAlpha s of 
-        ([], varPows) -> (0, parseUnitMonomial varPows)
-        (coef, varPows) -> (parseCoef coef, parseUnitMonomial varPows) 
+-- switch empty string for 1
+extractExp :: String -> Integer
+extractExp s 
+    | (stripped == []) = 1
+    | otherwise = read stripped :: Integer
+    where stripped = filReqSymbols s
+
+-- safe version of head, adapted to our needs
+safe_head :: String -> Char
+safe_head [] = ' '
+safe_head xs = head xs
 
 -- Parses the coefficient, handling negative values and the absence of coefficient
 parseCoef :: String -> Integer
 parseCoef [] = 1
 parseCoef s 
-        | (head s == '-') = -1
+        | (head s == '-' && (length s) == 1) = -1
         | (head s == '-' && (length s) > 1) = negate (read (tail s) :: Integer)
-        | otherwise = read s :: Integer 
-
--- Parses the variables and their powers, handling the absence of power zipping every variable with 1
-cheeky_zipper :: (String, String) -> [(Char, Integer)]
-cheeky_zipper (l,p) 
-    | (p == "") =  zip l (repeat 1)
-    | ((length l) == 1) = [(head l, 1)]
-    | otherwise = zip (pop l) (repeat 1)
-
--- Handles cases for parseUnitMonomial where reading expoents returns an empty string, returns 1
-handleSmth :: String -> Integer
-handleSmth s
-        | s == [] = 1
         | otherwise = read s :: Integer
 
--- Safer version of the tail funcions
-safe_tail :: [a] -> [a]
-safe_tail [] = []
-safe_tail xs = tail xs
+-- Converts a String containing only content for variables and converts into a list of [(Char, Integer)] -> e.g "xy"
+parseMonomialVars :: String -> [Var]
+parseMonomialVars [] = []
+parseMonomialVars s = [(safe_head var, extractExp tst)] ++ parseMonomialVars rest
+    where 
+        (var, rem) = (takeWhile (isAlpha) s, dropWhile (isAlpha) s)
+        (tst, rest) = ((takeWhile (\n -> (isDigit n) || ((`elem` "-()^")) n) rem), (dropWhile(\n -> (isDigit n) || ((`elem` "-()^")) n) rem))
+
+-- By using simplify minus, with the case of negative expoent (-2), would end up like (+-2), and that was not initially intended, this works it around
+replacePattern :: String -> String
+replacePattern [] = []
+replacePattern ('(':'+':'-':a:')':xs) = '(':'-':a:')': replacePattern xs
+replacePattern (x:xs) = x:replacePattern xs
+
+-- Separates coefficient of the monomial and then parses the rest of the variables using parseUnitMonomial
+parseMonomial :: String -> (Mono)
+parseMonomial s = case break isAlpha s of 
+        ([], varPows) -> (1, parseMonomialVars s)
+        (a, []) -> (read a :: Integer, [])
+        (coef, varPows) -> (parseCoef coef, parseMonomialVars varPows) 
 
 
-parseUnitMonomial :: String -> [Var]
-parseUnitMonomial [] = []
-parseUnitMonomial l 
-        | (l == []) = []
-        | (all isAlpha l && (length l > 1)) = cheeky_zipper (vars,pows)
-        | (length (vars) > 1) = (cheeky_zipper (vars,pows)) ++ [(last vars, read_Int (takeWhile (isDigit) (tail fx)))] ++ parseUnitMonomial rest
-        | otherwise = [(head vars, handleSmth (takeWhile (isDigit) (safe_tail pows)))] ++ parseUnitMonomial rest
-        where 
-        (vars, pows) = span isAlpha l
-        (fx, rest) = break isAlpha pows
-
--- Wrapper function for all the functions necessary to the parser
-parsePoly :: String -> Poly
-parsePoly [] = []
-parsePoly s = remove_zeros (map (parseMonomial) (remove_mult (remove_plus (simplify_minus (formatSpace s)))))
+-- END NORMAL PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- REVERSE PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-parse_variables :: [(Char, Integer)] -> String
-parse_variables [] = ""
-parse_variables (x:xs) = [(fst x)] ++ parse_var (snd x) ++ parse_variables xs
+-- check if number is negative
+isNegative :: Integer -> Bool
+isNegative n = n < 0
 
--- Handles the parsing of a Monoid with extra care to present it nicely in a String
-reverse_parser :: Mono -> String 
-reverse_parser (a,b) 
-    | (a == 1)  = "+ 1" ++ parse_variables b
-    | (a == 1 && b /= [])  = "+ " ++ parse_variables b
-    | (a == -1) = "- 1" ++ parse_variables b
-    | (a == -1 && b /= []) = "- " ++ parse_variables b
-    | (a < 0)   = "- " ++ (show (abs a)) ++ parse_variables b
-    | otherwise = "+ " ++ (show a) ++ parse_variables b
-       
-parse_var :: Integer -> String
-parse_var i
-    | i == 1 = ""
-    | i == -1 = "-"
-    | otherwise = "^" ++ show i
-
+-- Workaround to remove the + that occurs in strings, e.g. "+ 1 + x^2" -> "1 + x^2"
 handle_first_plus :: String -> String
 handle_first_plus s 
     | ((head s) == '+') = (drop 2 s)
     | otherwise = s
 
-wrap_reverse_parser :: [Mono] -> String
-wrap_reverse_parser l = handle_first_plus (intercalate " " (map (reverse_parser) l))
+-- Adds parenthesis to a string, to be used in the negative expoents e.g "x^-2" -> "x^(-2)"
+add_parenthesis :: String -> String
+add_parenthesis s = "(" ++ s ++ ")"
+
+-- Parses a lists of variables and returns a string, e.g. [(x,2), (y,3)] -> "x^2y^3"
+parse_variables :: [Var] -> String
+parse_variables [] = ""
+parse_variables ((a, b):xs)
+    | (b == 1) = a : parse_variables xs
+    | (isNegative b) = a : '^' : add_parenthesis (show b) ++ parse_variables xs
+    | otherwise = a : '^' : show b ++ parse_variables xs
+
+-- Parses a monomial and returns a string, e.g. (2, [(x,2), (y,3)]) -> "2x^2y^3"
+reverseMono :: Mono -> String
+reverseMono (a, b) 
+    | (a == 1 && b == []) = "+ 1" ++ parse_variables b
+    | (a == -1 && b == []) = "- 1" ++ parse_variables b
+    | (a == 1) = "+ " ++ parse_variables b
+    | (a == -1) = "- " ++ parse_variables b
+    | (isNegative a) = "- " ++ show (abs a) ++ parse_variables b
+    | otherwise = "+ " ++ show a ++ parse_variables b
+
+-- END REVERSE PARSER -----------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- WrapperFunctions  -----------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Converts a String into a Polynomial
+parsePoly :: String -> Poly
+parsePoly [] = []
+parsePoly s = remove_zeros (map (parseMonomial) (remove_plus (remove_mult (replacePattern ((simplify_minus (formatSpace s)))))))
+
+-- Converts a Polynomial back into a String
+reverseParser :: Poly -> String
+reverseParser l = handle_first_plus (intercalate " " (map (reverseMono) l))

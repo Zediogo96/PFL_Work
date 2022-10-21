@@ -13,10 +13,6 @@ simp (x:xs) = [(fst x + vs, snd x)] ++ simp resto
         vs = sum (map (fst) ks)
         (ks, resto) =  partition (\y -> (lisEquals (snd x) (snd y) == True)) xs
 
--- Wrapper function to add poly, using the
-addPoly :: Poly -> Poly -> Poly 
-addPoly xs ys = (remove_exp_zero (remove_zeros( simp (xs ++ ys))))
-
 -- Sum Variables that have the same key
 sumByKey :: (Eq k, Num v) => [(k, v)] -> [(k, v)]
 sumByKey []         = []
@@ -60,10 +56,6 @@ max_exp l = foldr1 (\x y ->if x >= y then x else y) (map (snd) l)
 poly_sorter :: Poly -> Poly
 poly_sorter l = sortBy ((flip compare `on` max_exp . snd) <> (flip compare `on` fst)) l
 
--- Wrapper Function for the complete treatment of polynomial
-simplify :: Poly -> Poly
-simplify l = (remove_exp_zero (poly_sorter (remove_zeros (simp l))))
-
 helper_func :: [Var] -> Var
 helper_func [] = (' ',1)
 helper_func l = head l
@@ -76,11 +68,7 @@ derive' (x:xs) c = (coef, (fst to_derive', (snd (to_derive') - 1)) : diff) : der
     (equal, diff) = partition (\(a,b) -> (a == c)) (snd x)
     to_derive' = helper_func equal
     coef = (fst x) * ((snd to_derive'))
-
--- Wrapper function to derive
-derive :: Poly -> Char -> Poly
-derive l c = simplify (derive' l c)
-  
+ 
 -- Multiplies two monomials
 multiply_monoid :: Mono -> Mono -> Mono
 multiply_monoid x y = (coef, sumThem (variables))
@@ -97,5 +85,26 @@ sumThem = map sumGroup . groupBy fstEq . sortOn fst
     fstEq (a, _) (b, _) = a == b
 
 -- Wrapper function to multiply two polynomials
-multiply_Poly :: Poly -> Poly -> Poly
-multiply_Poly l1 l2 = (remove_exp_zero (concatMap (\x -> map (\y -> multiply_monoid x y) l1) l2))
+multiplyPoly' :: Poly -> Poly -> Poly
+multiplyPoly' l1 l2 = (remove_exp_zero (concatMap (\x -> map (\y -> multiply_monoid x y) l1) l2))
+
+
+-- WrapperFunctions  -----------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Polynomial Simplification
+simplify :: Poly -> Poly
+simplify l = (remove_exp_zero (poly_sorter (remove_zeros (simp l))))
+
+-- Polynomial Addition 
+addPoly :: Poly -> Poly -> Poly 
+addPoly xs ys = simplify (remove_exp_zero (remove_zeros( simp (xs ++ ys))))
+
+
+-- Polynomial Multiplication
+multiplyPoly :: Poly -> Poly -> Poly
+multiplyPoly p1 p2 = simplify (multiplyPoly' p1 p2)
+
+--Polynomial derivation according to a variable
+derive :: Poly -> Char -> Poly
+derive l c = simplify (derive' l c)
