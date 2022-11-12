@@ -10,7 +10,6 @@ strEquals [] [] = "TRUE"
 strEquals (x:xs) (y:ys) = if x == y then strEquals xs ys else "FALSE"
 strEquals _ _ = "FALSE"
 
-
 main :: IO() 
 main = do
 

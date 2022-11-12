@@ -3,7 +3,7 @@ import Data.Char (isSpace, isLetter, isAlpha, isDigit, isSymbol)
 import Data.Function
 import Data.List
 
-
+-- Data Structures Used
 type Var = (Char, Integer)
 type Mono = (Integer, [Var])
 type Poly = [Mono]
