@@ -45,4 +45,6 @@ frequenta(redes, eduardo).
 
 /* c */
 aluno(X,Y) :- frequenta(UC,X), leciona(UC,Y).
+professor(X,Y) :- aluno(Y,X).
+colega(X,Y) :- frequenta(UC,X), frequenta(UC,Y), X \= Y; leciona(UC,X), leciona(UC,Y), X \= Y.
 
