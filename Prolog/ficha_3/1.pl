@@ -43,6 +43,8 @@ cut_test_c(‘five’, ‘five’).
 % c)
 % cut_test_c(X, Y), write(X-Y), nl, fail. 
 
+% cause encontrar o primeiro data(X) que será 1, em depois leva cuta às procuras mais à esquerda, logo só continuara a procurar no ramo do primeiro data(X) = 1, que retorna one-one, one-two, one-three.
+
 immature(X):- adult(X), !, fail.
 % cut vermelho - impede immature(X). de correr, cortando para adultos e nao-adultos
 
