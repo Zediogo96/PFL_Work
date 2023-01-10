@@ -41,7 +41,6 @@ professor_de(X,Y) :- frequenta(_UC, Y), leciona(_UC, X).
 uc_comum(X,Y) :- frequenta(_UC, X), frequenta(_UC, Y), (X \= Y).
 colega(X,Y) :- leciona(_,X), leciona(_,Y); frequenta(_Z, X), frequenta(_Z, Y), (X \= Y).
 
-
 % b
 
 % i.    leciona(X, diogenes).
