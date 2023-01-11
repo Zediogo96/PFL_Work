@@ -29,7 +29,6 @@ fibonacci(N, Fib) :-
 
 % d
 
-
 isPrime(X) :- 
     NX is X - 1,
     isPrime(X,NX).
